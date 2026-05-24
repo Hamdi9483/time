@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+  <title>لوحة إدارة الدوام</title>
+  
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- خط عربي -->
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <!-- أيقونات -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  
+  <style>
+    /* === متغيرات محسنة === */
+    :root {
+      --bg-primary: #f1f5f9;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --border-color: #e2e8f0;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: rgba(79, 70, 229, 0.08);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+      --shadow-md: 0 10px 25px -5px rgba(0,0,0,0.08), 0 4px 10px -6px rgba(0,0,0,0.04);
+      --radius-sm: 10px;
+      --radius: 16px;
+      --radius-lg: 20px;
+      --day-active: #4f46e5;
+      --day-hover: #c7d2fe;
+      --holiday-bg: #fef2f2;
+      --holiday-border: #fecaca;
+      --transition: all 0.2s ease;
+    }
+    [data-theme="dark"] {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --border-color: #334155;
+      --primary: #818cf8;
+      --primary-hover: #6366f1;
+      --primary-light: rgba(129, 140, 248, 0.12);
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+      --shadow-md: 0 10px 25px -5px rgba(0,0,0,0.4);
+      --day-active: #818cf8;
+      --day-hover: #4f46e5;
+      --holiday-bg: #451a1a;
+      --holiday-border: #7f1d1d;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Tajawal', -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      transition: background 0.3s, color 0.3s;
+      min-height: 100vh;
+      background-image: radial-gradient(circle at 10% 20%, var(--primary-light) 0%, transparent 35%);
+    }
+    .header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+      background: rgba(var(--bg-secondary-rgb, 255,255,255), 0.85);
+      box-shadow: var(--shadow-sm);
+    }
+    [data-theme="dark"] .header {
+      background: rgba(30, 41, 59, 0.85);
+    }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .header h1 i {
+      background: none;
+      -webkit-text-fill-color: var(--primary);
+      font-size: 1.8rem;
+    }
+    .header-actions {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+    }
+    .btn-icon {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.9rem;
+      cursor: pointer;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: var(--transition);
+      font-size: 0.95rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-sm);
+      background: var(--bg-secondary);
+    }
+    .btn-icon:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow);
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 1.8rem;
+    }
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      padding: 1.8rem;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      backdrop-filter: blur(2px);
+    }
+    .card:hover {
+      box-shadow: var(--shadow-md);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--text-primary);
+    }
+    .card-title i {
+      color: var(--primary);
+      font-size: 1.35rem;
+    }
+    .badge {
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 0.25rem 0.8rem;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+    .days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+    }
+    .day-btn {
+      aspect-ratio: 1 / 1;
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.2rem;
+      transition: var(--transition);
+      font-size: 0.85rem;
+      padding: 0.3rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-sm);
+    }
+    .day-btn:hover {
+      border-color: var(--day-hover);
+      background: var(--day-hover);
+      color: #1e293b;
+      transform: translateY(-2px);
+    }
+    .day-btn.active {
+      background: var(--day-active);
+      border-color: var(--day-active);
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3);
+    }
+    .day-name {
+      font-size: 0.7rem;
+      opacity: 0.9;
+      font-weight: 500;
+    }
+    .day-num {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+    .time-inputs {
+      display: flex;
+      gap: 1.2rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+    .time-input {
+      flex: 1;
+      min-width: 130px;
+    }
+    .time-input label {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    .time-input input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    .time-input input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+    }
+    .calendar-nav {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.3rem;
+    }
+    .calendar-day-header {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      padding: 0.6rem 0.2rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .calendar-day {
+      aspect-ratio: 1 / 1;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 0.9rem;
+      position: relative;
+      font-weight: 500;
+      background: var(--bg-secondary);
+    }
+    .calendar-day:hover:not(.other-month):not(.disabled) {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      transform: scale(1.03);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .calendar-day.other-month {
+      color: var(--text-secondary);
+      opacity: 0.4;
+      cursor: default;
+      background: transparent;
+    }
+    .calendar-day.disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      background: var(--bg-primary);
+      text-decoration: line-through;
+    }
+    .calendar-day.holiday {
+      background: var(--holiday-bg);
+      border-color: var(--holiday-border);
+      color: var(--danger);
+      font-weight: 700;
+    }
+    .calendar-day.holiday::after {
+      content: "🏖️";
+      position: absolute;
+      bottom: 1px;
+      font-size: 0.75rem;
+    }
+    .calendar-day.today {
+      border: 2px solid var(--warning);
+      font-weight: 700;
+      background: rgba(245, 158, 11, 0.08);
+    }
+    .holidays-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      margin-top: 1rem;
+      background: var(--bg-secondary);
+    }
+    .holiday-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    }
+    .holiday-item:last-child {
+      border-bottom: none;
+    }
+    .holiday-item:hover {
+      background: var(--primary-light);
+    }
+    .holiday-item .remove-btn {
+      background: none;
+      border: none;
+      color: var(--danger);
+      cursor: pointer;
+      padding: 0.35rem;
+      border-radius: 6px;
+      transition: var(--transition);
+      font-size: 1rem;
+    }
+    .holiday-item .remove-btn:hover {
+      background: rgba(239, 68, 68, 0.15);
+      transform: scale(1.1);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: white;
+      border: none;
+      padding: 0.85rem 1.8rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      transition: var(--transition);
+      width: 100%;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+      letter-spacing: 0.3px;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--primary-hover), #3730a3);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
+    }
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      padding: 0.55rem 1.1rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-family: inherit;
+      transition: var(--transition);
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: var(--bg-secondary);
+    }
+    .btn-outline:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      padding: 1rem 2rem;
+      border-radius: 40px;
+      box-shadow: var(--shadow-md);
+      border-left: 5px solid var(--primary);
+      z-index: 1000;
+      animation: slideUp 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 500;
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.9);
+    }
+    [data-theme="dark"] .toast {
+      background: rgba(30,41,59,0.95);
+    }
+    .toast.success {
+      border-left-color: var(--success);
+    }
+    .toast.error {
+      border-left-color: var(--danger);
+    }
+    .toast.warning {
+      border-left-color: var(--warning);
+    }
+    .toast.hidden {
+      display: none;
+    }
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translate(-50%, 25px);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      padding: 1rem;
+    }
+    .spinner {
+      width: 1.2rem;
+      height: 1.2rem;
+      border: 2px solid var(--border-color);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+        gap: 1.5rem;
+      }
+      .header-content {
+        flex-direction: column;
+        text-align: center;
+      }
+      .days-grid {
+        gap: 0.4rem;
+      }
+      .time-inputs {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <h1><i class="bi bi-calendar-week"></i> <span data-i18n="title">لوحة إدارة الدوام</span></h1>
+      <div class="header-actions">
+        <button id="langToggle" class="btn-icon"><i class="bi bi-globe"></i> <span id="langLabel">EN</span></button>
+        <button id="themeToggle" class="btn-icon"><i class="bi bi-moon-stars-fill"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- أيام الدوام -->
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title"><i class="bi bi-calendar-check"></i> <span data-i18n="workDays">أيام الدوام</span></h2>
+        <span class="badge" id="daysCount">5/7</span>
+      </div>
+      <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.2rem;" data-i18n="workDaysHint">اختر أيام الأسبوع التي تعمل فيها العيادة</p>
+      <div class="days-grid" id="daysGrid"></div>
+      <button id="saveDaysBtn" class="btn-primary"><i class="bi bi-save"></i> <span data-i18n="save">حفظ في القاعدة</span></button>
+    </section>
+
+    <!-- ساعات العمل -->
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title"><i class="bi bi-clock"></i> <span data-i18n="workHours">ساعات العمل</span></h2>
+      </div>
+      <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.2rem;" data-i18n="workHoursHint">حدد وقت بدء وانتهاء الدوام اليومي</p>
+      <div class="time-inputs">
+        <div class="time-input">
+          <label data-i18n="startTime">وقت البدء</label>
+          <input type="time" id="workStart" value="09:00">
+        </div>
+        <div class="time-input">
+          <label data-i18n="endTime">وقت الانتهاء</label>
+          <input type="time" id="workEnd" value="17:00">
+        </div>
+      </div>
+      <button id="saveHoursBtn" class="btn-primary" style="margin-top:1.8rem;"><i class="bi bi-save"></i> <span data-i18n="save">حفظ في القاعدة</span></button>
+    </section>
+
+    <!-- العطل -->
+    <section class="card" style="grid-column: 1 / -1;">
+      <div class="card-header">
+        <h2 class="card-title"><i class="bi bi-calendar-x"></i> <span data-i18n="holidays">تواريخ العطل</span></h2>
+        <button id="clearHolidaysBtn" class="btn-outline" style="padding:0.45rem 1rem;font-size:0.85rem;">
+          <i class="bi bi-trash"></i> <span data-i18n="clearAll">مسح الكل</span>
+        </button>
+      </div>
+      <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.2rem;" data-i18n="holidaysHint">انقر على أي تاريخ في التقويم لإضافته أو إزالته من العطل</p>
+      <div class="calendar-header">
+        <div class="calendar-nav">
+          <button class="btn-outline" id="prevMonth"><i class="bi bi-chevron-left"></i></button>
+          <button class="btn-outline" id="todayBtn"><i class="bi bi-calendar-today"></i></button>
+          <button class="btn-outline" id="nextMonth"><i class="bi bi-chevron-right"></i></button>
+        </div>
+        <h3 id="currentMonth" style="font-size:1.15rem;font-weight:700;"></h3>
+        <div style="width:100px;"></div>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+      <div style="margin-top:1.8rem;">
+        <h4 style="margin-bottom:0.8rem;font-size:1rem;font-weight:600;" data-i18n="selectedHolidays">العطل المحددة (<span id="holidaysCount">0</span>)</h4>
+        <div class="holidays-list" id="holidaysList">
+          <div style="padding:1.2rem;text-align:center;color:var(--text-secondary);" data-i18n="noHolidays">لا توجد عطل محددة</div>
+        </div>
+      </div>
+      <button id="saveHolidaysBtn" class="btn-primary" style="margin-top:1.2rem;"><i class="bi bi-save"></i> <span data-i18n="save">حفظ في القاعدة</span></button>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script>
+    // ============================================
+    // 🌐 الترجمة - لا تخزن في القاعدة
+    // ============================================
+    const translations = {
+      ar: {
+        title: "لوحة إدارة الدوام", workDays: "أيام الدوام", workDaysHint: "اختر أيام الأسبوع التي تعمل فيها العيادة",
+        workHours: "ساعات العمل", workHoursHint: "حدد وقت بدء وانتهاء الدوام اليومي",
+        holidays: "تواريخ العطل", holidaysHint: "انقر على أي تاريخ في التقويم لإضافته أو إزالته من العطل",
+        startTime: "وقت البدء", endTime: "وقت الانتهاء", save: "حفظ في القاعدة", clearAll: "مسح الكل",
+        selectedHolidays: "العطل المحددة", noHolidays: "لا توجد عطل محددة", loading: "جاري التحميل من القاعدة...",
+        saved: "✅ تم الحفظ في قاعدة البيانات", error: "❌ خطأ في الاتصال بالقاعدة", confirmClear: "مسح جميع العطل من القاعدة؟",
+        days: ["أحد","اثنين","ثلاثاء","أربعاء","خميس","جمعة","سبت"],
+        months: ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"],
+      },
+      en: {
+        title: "Work Schedule Manager", workDays: "Work Days", workDaysHint: "Select operating days",
+        workHours: "Work Hours", workHoursHint: "Set daily start and end times",
+        holidays: "Holiday Dates", holidaysHint: "Click dates to add/remove holidays",
+        startTime: "Start Time", endTime: "End Time", save: "Save to Database", clearAll: "Clear All",
+        selectedHolidays: "Selected Holidays", noHolidays: "No holidays set", loading: "Loading from database...",
+        saved: "✅ Saved to database", error: "❌ Database error", confirmClear: "Clear all holidays from database?",
+        days: ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
+        months: ["January","February","March","April","May","June","July","August","September","October","November","December"],
+      }
+    };
+    let currentLang = localStorage.getItem('lang') || 'ar';
+    function t(key) { return translations[currentLang]?.[key] || key; }
+    function setLang(lang) {
+      currentLang = lang; localStorage.setItem('lang', lang);
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const k = el.dataset.i18n; if(translations[currentLang]?.[k]) el.textContent = translations[currentLang][k];
+      });
+      renderDaysGrid(); renderCalendar(); renderHolidaysList();
+    }
+    function getLang() { return currentLang; }
+
+    // ============================================
+    // 🌓 الوضع الليلي - تفضيل محلي فقط
+    // ============================================
+    function initTheme() {
+      const html = document.documentElement, btn = document.getElementById('themeToggle');
+      const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      html.setAttribute('data-theme', theme);
+      btn.querySelector('i').className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+      btn.addEventListener('click', () => {
+        const nt = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', nt); localStorage.setItem('theme', nt);
+        btn.querySelector('i').className = nt === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+      });
+    }
+
+    // ============================================
+    // 🗄️ Supabase - المصدر الوحيد لبيانات العيادة
+    // ============================================
+    const SUPABASE_URL = 'https://ncqvzpcqotdiwjqbwlwp.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_98lfpU1zaqG-MNxkhlvg6g_KEMPMPbS';
+    const { createClient } = supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // حالة التطبيق - تُملأ من القاعدة فقط
+    let clinicSettings = { allowed_days: [], blocked_dates: [], work_start: '', work_end: '' };
+    let isLoading = false, currentCalendarDate = new Date();
+
+    // ============================================
+    // 🔄 التهيئة - تحميل من Supabase فقط
+    // ============================================
+    document.addEventListener('DOMContentLoaded', async () => {
+      initTheme(); setLang(currentLang);
+      document.getElementById('langLabel').textContent = currentLang.toUpperCase();
+      
+      // أحداث الأزرار
+      document.getElementById('langToggle').addEventListener('click', () => {
+        const nl = getLang() === 'ar' ? 'en' : 'ar'; setLang(nl);
+        document.getElementById('langLabel').textContent = nl.toUpperCase();
+      });
+      document.getElementById('saveDaysBtn').addEventListener('click', () => saveToDatabase('days'));
+      document.getElementById('saveHoursBtn').addEventListener('click', () => saveToDatabase('hours'));
+      document.getElementById('saveHolidaysBtn').addEventListener('click', () => saveToDatabase('holidays'));
+      document.getElementById('clearHolidaysBtn').addEventListener('click', clearHolidays);
+      document.getElementById('prevMonth').addEventListener('click', () => changeMonth(-1));
+      document.getElementById('nextMonth').addEventListener('click', () => changeMonth(1));
+      document.getElementById('todayBtn').addEventListener('click', () => { currentCalendarDate = new Date(); renderCalendar(); });
+      
+      // ⭐ تحميل الإعدادات من السجل #1 في Supabase فقط
+      await loadFromDatabase();
+      renderDaysGrid(); renderCalendar(); renderHolidaysList();
+    });
+
+    // ============================================
+    // 📥 التحميل من السجل رقم 1 فقط
+    // ============================================
+    async function loadFromDatabase() {
+      if(isLoading) return; isLoading = true; showToast(t('loading'), 'info');
+      try {
+        const { data, error } = await db.from('clinic_settings').select('*').eq('id', 1).single();
+        if(error && error.code !== 'PGRST116') throw error;
+        
+        if(data) {
+          clinicSettings = {
+            allowed_days: data.allowed_days || [0,1,2,3,4],
+            blocked_dates: data.blocked_dates || [],
+            work_start: data.work_start || '09:00:00',
+            work_end: data.work_end || '17:00:00'
+          };
+          document.getElementById('workStart').value = clinicSettings.work_start.slice(0,5);
+          document.getElementById('workEnd').value = clinicSettings.work_end.slice(0,5);
+        } else {
+          clinicSettings = { allowed_days: [0,1,2,3,4], blocked_dates: [], work_start: '09:00:00', work_end: '17:00:00' };
+        }
+        updateDaysCount(); updateHolidaysCount();
+      } catch(err) {
+        console.error('Database load error:', err); showToast(t('error'), 'error');
+      } finally { isLoading = false; }
+    }
+
+    // ============================================
+    // 📤 الحفظ إلى السجل رقم 1 فقط
+    // ============================================
+    async function saveToDatabase(section) {
+      if(isLoading) return; isLoading = true;
+      try {
+        const updates = {};
+        if(section === 'days' || section === 'all') updates.allowed_days = clinicSettings.allowed_days;
+        if(section === 'hours' || section === 'all') {
+          updates.work_start = document.getElementById('workStart').value + ':00';
+          updates.work_end = document.getElementById('workEnd').value + ':00';
+          clinicSettings.work_start = updates.work_start;
+          clinicSettings.work_end = updates.work_end;
+        }
+        if(section === 'holidays' || section === 'all') updates.blocked_dates = clinicSettings.blocked_dates;
+        
+        let { error } = await db.from('clinic_settings').update(updates).eq('id', 1);
+        
+        if(error && (error.code === '42P01' || error.message?.includes('not found'))) {
+          const { error: insErr } = await db.from('clinic_settings').insert([{ id: 1, ...updates }]);
+          if(insErr) throw insErr;
+        } else if(error) throw error;
+        
+        showToast(t('saved'), 'success');
+        if(section !== 'all') await loadFromDatabase();
+      } catch(err) {
+        console.error('Database save error:', err); showToast(t('error'), 'error');
+      } finally { isLoading = false; }
+    }
+
+    function renderDaysGrid() {
+      const grid = document.getElementById('daysGrid'), days = t('days');
+      grid.innerHTML = days.map((name, idx) => {
+        const active = clinicSettings.allowed_days.includes(idx);
+        return `<button class="day-btn ${active?'active':''}" onclick="toggleDay(${idx})" title="${name}">
+          <span class="day-num">${idx}</span><span class="day-name">${name}</span></button>`;
+      }).join('');
+      updateDaysCount();
+    }
+    function toggleDay(idx) {
+      const i = clinicSettings.allowed_days.indexOf(idx);
+      if(i > -1) clinicSettings.allowed_days.splice(i,1);
+      else { clinicSettings.allowed_days.push(idx); clinicSettings.allowed_days.sort((a,b)=>a-b); }
+      renderDaysGrid();
+    }
+    function updateDaysCount() { document.getElementById('daysCount').textContent = `${clinicSettings.allowed_days.length}/7`; }
+
+    function renderCalendar() {
+      const grid = document.getElementById('calendarGrid');
+      const y = currentCalendarDate.getFullYear(), m = currentCalendarDate.getMonth();
+      document.getElementById('currentMonth').textContent = `${t('months')[m]} ${y}`;
+      const dayHeaders = t('days').map(d => `<div class="calendar-day-header">${d}</div>`).join('');
+      const firstDay = new Date(y, m, 1), startIdx = firstDay.getDay();
+      const daysInMonth = new Date(y, m+1, 0).getDate(), prevDays = new Date(y, m, 0).getDate();
+      const todayStr = new Date().toISOString().split('T')[0];
+      
+      let html = dayHeaders;
+      for(let i=startIdx-1; i>=0; i--) html += `<div class="calendar-day other-month">${prevDays-i}</div>`;
+      for(let d=1; d<=daysInMonth; d++) {
+        const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isToday = ds===todayStr, isHol = clinicSettings.blocked_dates.includes(ds);
+        const dow = new Date(y,m,d).getDay(), disabled = !clinicSettings.allowed_days.includes(dow) && !isHol;
+        let cls = 'calendar-day';
+        if(isToday) cls+=' today'; if(isHol) cls+=' holiday'; if(disabled) cls+=' disabled';
+        html += `<div class="${cls}" onclick="toggleHoliday('${ds}')">${d}</div>`;
+      }
+      for(let d=1, total=49, filled=startIdx+daysInMonth; total-filled>=d; d++) 
+        html += `<div class="calendar-day other-month">${d}</div>`;
+      grid.innerHTML = html;
+    }
+    function changeMonth(delta) { currentCalendarDate.setMonth(currentCalendarDate.getMonth()+delta); renderCalendar(); }
+    function toggleHoliday(ds) {
+      const i = clinicSettings.blocked_dates.indexOf(ds);
+      if(i>-1) clinicSettings.blocked_dates.splice(i,1);
+      else { clinicSettings.blocked_dates.push(ds); clinicSettings.blocked_dates.sort(); }
+      renderCalendar(); renderHolidaysList(); updateHolidaysCount();
+    }
+    function updateHolidaysCount() { document.getElementById('holidaysCount').textContent = clinicSettings.blocked_dates.length; }
+
+    function renderHolidaysList() {
+      const list = document.getElementById('holidaysList'), lang = getLang();
+      if(clinicSettings.blocked_dates.length === 0) {
+        list.innerHTML = `<div style="padding:1.2rem;text-align:center;color:var(--text-secondary);">${t('noHolidays')}</div>`; return;
+      }
+      list.innerHTML = clinicSettings.blocked_dates.map(dt => {
+        const d = new Date(dt+'T00:00:00'), dn = t('days')[d.getDay()], mo = t('months')[d.getMonth()];
+        const fmt = lang==='ar' ? `${d.getDate()} ${mo} ${d.getFullYear()} (${dn})` : `${mo} ${d.getDate()}, ${d.getFullYear()} (${dn})`;
+        return `<div class="holiday-item"><span>${fmt}</span>
+          <button class="remove-btn" onclick="removeHoliday('${dt}')" title="${t('clearAll')}"><i class="bi bi-x-lg"></i></button></div>`;
+      }).join('');
+    }
+    function removeHoliday(ds) {
+      const i = clinicSettings.blocked_dates.indexOf(ds);
+      if(i>-1) { clinicSettings.blocked_dates.splice(i,1); renderCalendar(); renderHolidaysList(); updateHolidaysCount(); }
+    }
+    function clearHolidays() {
+      if(confirm(t('confirmClear'))) {
+        clinicSettings.blocked_dates = []; renderCalendar(); renderHolidaysList(); updateHolidaysCount();
+        saveToDatabase('holidays');
+      }
+    }
+
+    function showToast(msg, type='info') {
+      const t = document.getElementById('toast'); t.textContent = msg; t.className = `toast ${type}`;
+      t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'), 3000);
+    }
+
+    window.toggleDay = toggleDay; window.toggleHoliday = toggleHoliday; window.removeHoliday = removeHoliday;
+  </script>
+</body>
+</html>
