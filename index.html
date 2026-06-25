@@ -286,18 +286,22 @@
     .calendar-day-header {
   background: var(--primary-light);
   color: var(--text-secondary);
-  font-size: 0.85rem;  /* حجم مناسب */
+  font-size: 0.85rem;  
   font-weight: 700;
   border-color: var(--border-color);
   text-transform: uppercase;
-  aspect-ratio: 1 / 1;     /* مربع */
+  aspect-ratio: 1 / 1;     
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
   border-radius: var(--radius-sm);
-  border: 2px solid var(--border-color);         
+  border: 2px solid var(--border-color); 
+  min-width: 30px;
+  max-width: 55px;
+  margin: 0 auto;
+  box-sizing: border-box;
     }
     .calendar-day {
   
@@ -348,7 +352,7 @@
       font-weight: 700;
     }
     .calendar-day.holiday::after {
-      content: "🏖️";
+      content: "✓";
       position: absolute;
       bottom: 1px;
       font-size: 0.75rem;
