@@ -814,6 +814,7 @@ const remaining = totalCells - (startIdx + daysInMonth);
 // أيام الشهر التالي - فقط حتى إكمال الصف الأخير
 for(let d = 1; d <= remaining; d++) {
   html += `<div class="calendar-day other-month">${d}</div>`;
+  }
       grid.innerHTML = html;
     }
     function changeMonth(delta) { currentCalendarDate.setMonth(currentCalendarDate.getMonth()+delta); renderCalendar(); }
