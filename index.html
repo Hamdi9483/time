@@ -284,18 +284,19 @@
   margin: 0 auto;
 }
     .calendar-day-header {
- aspect-ratio: 1 / 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  text-align: center;
   font-size: 0.7rem;
   color: var(--text-secondary);
-  padding: 0.1rem;
+  padding: 0.3rem 0.1rem;
   font-weight: 600;
   text-transform: uppercase;
-  background: var(--bg-primary);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-color);
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
     }
     .calendar-day {
   aspect-ratio: 1 / 0.9;
