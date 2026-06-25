@@ -286,13 +286,18 @@
     .calendar-day-header {
   background: var(--primary-light);
   color: var(--text-secondary);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: 700;
   border-color: var(--border-color);
   text-transform: uppercase;
+  aspect-ratio: 1 / 1;     
+  display: flex;           
+  align-items: center;    
+  justify-content: center; 
+  height: 100%;            
     }
     .calendar-day {
-  aspect-ratio: 1 / 0.9;
+  aspect-ratio: 1 / 1;
   border: 2px solid var(--border-color);
   border-radius: var(--radius-sm);  
   background: var(--bg-secondary);
@@ -304,15 +309,15 @@
   justify-content: center;
   gap: 0.1rem;
   transition: var(--transition);
-  font-size: 0.7rem;
+  font-size: 1rem;
   padding: 0.1rem;
-  font-weight: 500;
+  font-weight: 600;
   box-shadow: var(--shadow-sm);
   position: relative;
   min-width: 30px;
-  max-width: 45px;
+  max-width: 55px;
   width: 100%;
-  height: auto;
+  height: 100%;
 }
     
     .calendar-day:hover:not(.other-month):not(.disabled) {
