@@ -789,34 +789,53 @@
     }
     function updateDaysCount() { document.getElementById('daysCount').textContent = `${clinicSettings.allowed_days.length}/7`; }
 
-    function renderCalendar() {
-      const grid = document.getElementById('calendarGrid');
-      const y = currentCalendarDate.getFullYear(), m = currentCalendarDate.getMonth();
-      document.getElementById('currentMonth').textContent = `${t('months')[m]} ${y}`;
-      const dayHeaders = t('days').map(d => `<div class="calendar-day-header">${d}</div>`).join('');
-      const firstDay = new Date(y, m, 1), startIdx = firstDay.getDay();
-      const daysInMonth = new Date(y, m+1, 0).getDate(), prevDays = new Date(y, m, 0).getDate();
-      const todayStr = new Date().toISOString().split('T')[0];
-      
-      let html = dayHeaders;
-      for(let i=startIdx-1; i>=0; i--) html += `<div class="calendar-day other-month">${prevDays-i}</div>`;
-      for(let d=1; d<=daysInMonth; d++) {
-        const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const isToday = ds===todayStr, isHol = clinicSettings.blocked_dates.includes(ds);
-        const dow = new Date(y,m,d).getDay(), disabled = !clinicSettings.allowed_days.includes(dow) && !isHol;
-        let cls = 'calendar-day';
-        if(isToday) cls+=' today'; if(isHol) cls+=' holiday'; if(disabled) cls+=' disabled';
-        html += `<div class="${cls}" onclick="toggleHoliday('${ds}')">${d}</div>`;
-      }
-      const totalCells = Math.ceil((startIdx + daysInMonth) / 7) * 7;
-const remaining = totalCells - (startIdx + daysInMonth);
-
-// أيام الشهر التالي - فقط حتى إكمال الصف الأخير
-for(let d = 1; d <= remaining; d++) {
-  html += `<div class="calendar-day other-month">${d}</div>`;
+  function renderCalendar() {
+  const grid = document.getElementById('calendarGrid');
+  const y = currentCalendarDate.getFullYear(), m = currentCalendarDate.getMonth();
+  document.getElementById('currentMonth').textContent = `${t('months')[m]} ${y}`;
+  
+  // رؤوس الأيام
+  const dayHeaders = t('days').map(d => `<div class="calendar-day-header">${d}</div>`).join('');
+  
+  // حساب معلومات الشهر
+  const firstDay = new Date(y, m, 1);
+  const startIdx = firstDay.getDay(); // يوم بداية الشهر (0=أحد)
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const prevDays = new Date(y, m, 0).getDate();
+  const todayStr = new Date().toISOString().split('T')[0];
+  
+  let html = dayHeaders;
+  
+  // أيام الشهر السابق
+  for(let i = startIdx - 1; i >= 0; i--) {
+    html += `<div class="calendar-day other-month">${prevDays - i}</div>`;
   }
-      grid.innerHTML = html;
-    }
+  
+  // أيام الشهر الحالي
+  for(let d = 1; d <= daysInMonth; d++) {
+    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = ds === todayStr;
+    const isHol = clinicSettings.blocked_dates.includes(ds);
+    const dow = new Date(y, m, d).getDay();
+    const disabled = !clinicSettings.allowed_days.includes(dow) && !isHol;
+    
+    let cls = 'calendar-day';
+    if(isToday) cls += ' today';
+    if(isHol) cls += ' holiday';
+    if(disabled) cls += ' disabled';
+    
+    html += `<div class="${cls}" onclick="toggleHoliday('${ds}')">${d}</div>`;
+  }
+  
+  // أيام الشهر التالي - فقط لإكمال الصف الأخير
+  const totalCells = Math.ceil((startIdx + daysInMonth) / 7) * 7;
+  const remaining = totalCells - (startIdx + daysInMonth);
+  for(let d = 1; d <= remaining; d++) {
+    html += `<div class="calendar-day other-month">${d}</div>`;
+  }
+  
+  grid.innerHTML = html;
+}
     function changeMonth(delta) { currentCalendarDate.setMonth(currentCalendarDate.getMonth()+delta); renderCalendar(); }
     function toggleHoliday(ds) {
       const i = clinicSettings.blocked_dates.indexOf(ds);
