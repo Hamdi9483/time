@@ -712,7 +712,8 @@
         }
         updateDaysCount(); updateHolidaysCount();
       } catch(err) {
-        console.error('Database load error:', err); showToast(t('error'), 'error');
+        console.error('Database load error:', err); 
+        //showToast(t('error'), 'error');
       } finally { isLoading = false; }
     }
 
@@ -742,7 +743,8 @@
         showToast(t('saved'), 'success');
         if(section !== 'all') await loadFromDatabase();
       } catch(err) {
-        console.error('Database save error:', err); showToast(t('error'), 'error');
+        console.error('Database save error:', err); 
+        //showToast(t('error'), 'error');
       } finally { isLoading = false; }
     }
 
