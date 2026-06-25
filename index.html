@@ -284,19 +284,20 @@
   margin: 0 auto;
 }
     .calendar-day-header {
-  text-align: center;
-  font-size: 0.7rem;
+  aspect-ratio: 1 / 1;           /* نفس نسبة الخلايا */
+  display: flex;                 /* لتوسيط المحتوى */
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;               /* ← تكبير الخط (اختر ما يناسبك) */
   color: var(--text-secondary);
-  padding: 0.3rem 0.1rem;
-  font-weight: 600;
+  padding: 0.1rem;
+  font-weight: 700;
   text-transform: uppercase;
+  background: var(--primary-light); /* ← خلفية مختلفة للرؤوس */
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
   width: 100%;
-  min-width: 0;
-  max-width: 100%;
   box-sizing: border-box;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
     }
     .calendar-day {
   aspect-ratio: 1 / 0.9;
